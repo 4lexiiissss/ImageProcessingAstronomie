@@ -5,18 +5,18 @@ from model import FITSModel
 
 
 class FITSController:
-    def init(self, model, view):
+    def __init__(self, model, view):
         self.model = model
         self.view = view
         self.fit_files = []  # Stocke les chemins des fichiers FIT
 
     def load_fit_files(self):
         """Ouvre un dialogue pour charger 3 fichiers FIT."""
-        filepaths,  = self.view.open_file_dialog()
+        file_paths, _ = self.view.open_file_dialog()
         if len(file_paths) != 3:
             print("Veuillez sélectionner exactement 3 fichiers FIT.")
             return
-
+        
         self.fit_files = file_paths
 
         # Lire les fichiers FIT et créer une image RGB

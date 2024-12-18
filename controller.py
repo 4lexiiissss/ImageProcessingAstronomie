@@ -1,8 +1,8 @@
-import os
-import numpy as np
 from astropy.io import fits
-from model import FITSModel
-
+from astropy.visualization import MinMaxInterval, ImageNormalize
+import numpy as np
+from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtCore import Qt
 
 class FITSController:
     def __init__(self, model, view):
@@ -11,7 +11,7 @@ class FITSController:
         self.fit_files = []  # Stocke les chemins des fichiers FIT
 
     def load_fit_files(self):
-        """Ouvre un dialogue pour charger 3 fichiers FIT."""
+        """Ouvre un dialogue pour charger 3 fichiers FIT.""" 
         file_paths, _ = self.view.open_file_dialog()
         if len(file_paths) != 3:
             print("Veuillez sélectionner exactement 3 fichiers FIT.")
@@ -20,19 +20,22 @@ class FITSController:
         self.fit_files = file_paths
 
         # Lire les fichiers FIT et créer une image RGB
-        images = []
-        for path in self.fit_files:
-            try:
-                with fits.open(path) as hdul:
-                    image_data = hdul[0].data
-                    images.append(image_data)
-            except Exception as e:
-                print(f"Erreur lors de la lecture du fichier {path}: {e}")
-                return
+        data = fits.getdata(self.fit_files[0])  # Données pour H-alpha
+        data2 = fits.getdata(self.fit_files[1])  # Données pour OIII
+        data3 = fits.getdata(self.fit_files[2])  # Données pour SII
 
-        # Normaliser et combiner en RGB
-        images = [self.normalize_image(img) for img in images]
-        rgb_image = np.dstack(images)  # Combine les 3 canaux pour une image RGB
+        # Fixer les plages de valeurs pour augmenter le contraste
+        vmin, vmax = 10, 1000
+
+        norm = ImageNormalize(data, vmin=vmin, vmax=vmax, interval=MinMaxInterval())
+        norm2 = ImageNormalize(data2, vmin=vmin, vmax=vmax, interval=MinMaxInterval())
+        norm3 = ImageNormalize(data3, vmin=vmin, vmax=vmax, interval=MinMaxInterval())
+
+        # Créer l'image RGB en combinant les trois canaux
+        rgb_image = np.dstack((norm3(data3), norm(data), norm2(data2)))
+
+        # Afficher l'image dans la vue
+        self.display_image(rgb_image)
 
         # Sauvegarder l'image RGB en tant que fichier FITS
         output_path = self.save_as_fits(rgb_image)
@@ -49,16 +52,13 @@ class FITSController:
         hdu.writeto(output_path, overwrite=True)
         return output_path
 
-    def display_image(self):
-        """Affiche l'image RGB finale."""
-        rgb_image = self.model.get_rgb_image()
-        if rgb_image is not None:
-            self.view.set_image(rgb_image)
-
-    @staticmethod
-    def normalize_image(image):
-        """Normalise les valeurs d'une image FIT entre 0 et 1."""
-        image = np.nan_to_num(image, nan=0.0)  # Remplacer NaN par 0
-        min_val = np.min(image)
-        max_val = np.max(image)
-        return (image - min_val) / (max_val - min_val) if max_val > min_val else image
+    def display_image(self, rgb_image):
+        """Affiche l'image RGB finale dans la vue."""
+        height, width, channel = rgb_image.shape
+        bytes_per_line = 3 * width
+        q_image = QImage(
+            (rgb_image * 255).astype(np.uint8), width, height, bytes_per_line, QImage.Format.Format_RGB888
+        )
+        pixmap = QPixmap.fromImage(q_image)
+        self.view.image_label.setPixmap(pixmap)
+        self.view.image_label.setScaledContents(True)

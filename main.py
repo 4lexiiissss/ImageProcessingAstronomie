@@ -8,15 +8,12 @@ from controller import FITSController
 def main():
     app = QApplication(sys.argv)
 
-    # Création du modèle
     model = FITSModel()
 
-    # Création de la vue et du contrôleur
     controller = FITSController(model, None)
     view = FITSView(controller)
-    controller.view = view  # Relie le contrôleur à la vue
+    controller.view = view  
 
-    # Affiche la vue
     view.show()
     sys.exit(app.exec())
 

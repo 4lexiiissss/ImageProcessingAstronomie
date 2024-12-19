@@ -11,7 +11,6 @@ class FITSView(QWidget):
         super().__init__()
         self.controller = controller
 
-        # Configuration de l'interface
         self.setWindowTitle("Application FITS - MVC")
         self.layout = QVBoxLayout(self)
 
@@ -19,17 +18,12 @@ class FITSView(QWidget):
         self.load_button = QPushButton("Charger 3 fichiers FIT")
         self.load_button.clicked.connect(self.controller.load_fit_files)
 
-        self.show_button = QPushButton("Afficher l'image")
-        self.show_button.clicked.connect(self.controller.display_image)
-        self.show_button.setEnabled(False)
-
         # Label pour afficher l'image
         self.image_label = QLabel("L'image sera affichée ici.")
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Ajout des widgets
         self.layout.addWidget(self.load_button)
-        self.layout.addWidget(self.show_button)
         self.layout.addWidget(self.image_label)
 
     def open_file_dialog(self):

@@ -3,7 +3,7 @@ import numpy as np
 
 class FITSModel:
     def __init__(self):
-        self.rgb_image = None  # Stocke l'image RGB normalisée
+        self.rgb_image = None 
 
     def set_rgb_image(self, image: np.ndarray):
         """Définit l'image RGB."""

@@ -4,7 +4,6 @@ from model import FITSModel
 from view import FITSView
 from controller import FITSController
 
-
 def main():
     app = QApplication(sys.argv)
 
@@ -16,7 +15,6 @@ def main():
 
     view.show()
     sys.exit(app.exec())
-
 
 if __name__ == "__main__":
     main()

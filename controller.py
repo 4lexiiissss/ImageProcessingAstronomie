@@ -4,6 +4,7 @@ import numpy as np
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtCore import Qt
 from astroquery.skyview import SkyView
+import os 
 
 class FITSController:
     def __init__(self, model, view):
@@ -72,48 +73,35 @@ class FITSController:
         self.view.image_label.setPixmap(pixmap)
         self.view.image_label.setScaledContents(True)
 
+    def download_images(self):
+        position = self.view.get_position()
+        mission = self.view.get_mission()
+        dossier_sortie = self.view.get_output_directory()
+        if not position or not mission or not dossier_sortie:
+            self.view.show_error_message("Tous les champs doivent être renseignés.")
+            return
 
-""" 
-def download_fit():
-    
-    try:
-        # on récupére les missions dispo 
-        missions = SkyView.list_surveys()
-        if missions is None:
-            print("Error : Impossible de récupérer la liste des missions depuis SkyView.")
-            return
-        
-        # on met le filtre
-        filtered_missions = [m for m in missions if "JWST" in m or "HST" in m or "Spitzer" in m]
-        if not filtered_missions:
-            print("Aucune mission correspondante trouvée.")
-            return
-        
-        print("Choisissez une mission parmi les suivantes :")
-        for i, mission in enumerate(filtered_missions, 1):
-            print(f"{i}. {mission}")
-        
-        # on demande a l'utilisateur de chosiir une mission 
-        choice = int(input("Entrez le numéro de la mission choisie : "))
-        if choice < 1 or choice > len(filtered_missions):
-            print("Choix invalide.")
-            return
-        
-        selected_mission = filtered_missions[choice - 1]
-        print(f"Vous avez choisi : {selected_mission}")
-        
-        # télécharge les fichiers fit 
-        results = SkyView.get_images(position='M51', survey=[selected_mission])
-        if not results:
-            print("Erreur : Aucun fichier FITS trouvé pour cette mission.")
-            return
-        
-        for i, fits_file in enumerate(results, 1):
-            filename = f"{selected_mission.replace(' ', '_')}_{i}.fits"
-            fits_file.writeto(filename, overwrite=True)
-            print(f"Fichier FITS téléchargé : {filename}")
-    
-    except Exception as e:
-        print(f"Une erreur s'est produite : {e}")
+        try:
+            telecharger_donnees_rgb(position, mission, dossier_sortie)
+            self.view.show_message("Téléchargement terminé avec succès.")
+        except Exception as e:
+            self.view.show_error_message(f"Erreur lors du téléchargement des images : {str(e)}")
 
-"""
+def telecharger_donnees_rgb(position, mission, dossier_sortie):
+    surveys_rgb = {
+        "rouge": f"{mission} Red",
+        "vert": f"{mission} IR",
+        "bleu": f"{mission} Blue"
+    }
+    os.makedirs(dossier_sortie, exist_ok=True)
+
+    for couleur, survey in surveys_rgb.items():
+        try:
+            print(f"Téléchargement de la bande {couleur} ({survey})...")
+            fits_files = SkyView.get_images(position=position, survey=[survey])
+            for i, fits_file in enumerate(fits_files):
+                file_path = os.path.join(dossier_sortie, f"{couleur}_image_{i + 1}.fit")
+                fits_file[0].writeto(file_path, overwrite=True)
+                print(f"Fichier téléchargé : {file_path}")
+        except Exception as e:
+            print(f"Erreur lors du téléchargement de la bande {couleur} ({survey}) : {e}")

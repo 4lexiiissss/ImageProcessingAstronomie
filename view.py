@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QSlider, QLabel, QSizePolicy, QSpacerItem
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QSlider, QLabel, QSizePolicy, QSpacerItem, QMessageBox, QInputDialog
 from PyQt6.QtCore import Qt
 import numpy as np
 from ImageWidget import ImageWidget
@@ -66,9 +66,10 @@ class FITSView(QWidget):
         self.apply_button.setMaximumWidth(160)
         self.apply_button.setMaximumHeight(30)
 
-        self.download_button = QPushButton("Télécharger les images")
-        self.download_button.setMaximumWidth(160)
-        self.download_button.setMaximumHeight(30)
+        self.download_button = QPushButton("Télécharger les images") 
+        self.download_button.setMaximumWidth(160) 
+        self.download_button.setMaximumHeight(30) 
+        self.download_button.clicked.connect(self.controller.download_images) # Connexion du bouton
 
         # Ajout des widgets dans controls_layout
         self.controls_layout.addWidget(self.load_button)
@@ -95,3 +96,27 @@ class FITSView(QWidget):
     def set_image(self, rgb_image: np.ndarray):
         """Affiche l'image dans l'ImageWidget."""
         self.image_widget.setPixmap(rgb_image)
+
+    def get_position(self):
+        position, ok = QInputDialog.getText(self, "Position cible", "Entrez la position cible (par exemple, 'M31' ou '10.684,41.269') : ")
+        if ok:
+            return position
+        else:
+            return None
+    
+    def get_mission(self):
+        mission, ok = QInputDialog.getText(self, "Nom de la mission", "Entrez le nom de la mission ou du survey (par exemple, 'DSS2') : ")
+        if ok:
+            return mission
+        else:
+            return None
+    
+    def get_output_directory(self):
+        dossier_sortie = QFileDialog.getExistingDirectory(self, "Sélectionnez le dossier de sortie")
+        return dossier_sortie
+
+    def show_message(self, message):
+        QMessageBox.information(self, "Information", message)
+
+    def show_error_message(self, message):
+        QMessageBox.critical(self, "Erreur", message)

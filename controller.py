@@ -1,10 +1,10 @@
 from astropy.io import fits
-from astropy.visualization import MinMaxInterval, ImageNormalize
+from astropy.visualization import MinMaxInterval, ImageNormalize, PercentileInterval
 import numpy as np
 from PyQt6.QtGui import QPixmap, QImage
 from PyQt6.QtCore import Qt
 from astroquery.skyview import SkyView
-import os 
+import os
 
 class FITSController:
     def __init__(self, model, view):
@@ -21,35 +21,40 @@ class FITSController:
             return
 
         try:
-            self.fit_files = [fits.getdata(file_path) for file_path in file_paths]
+            self.fit_files = []
+            interval = PercentileInterval(99.5)
+            for file_path in file_paths:
+                data = fits.getdata(file_path)
+                normalized_data = interval(data)
+                normalized_data = np.nan_to_num(normalized_data, nan=0.0)
+                self.fit_files.append(normalized_data)
 
-            self.fit_files = [np.clip(data, 10, 1000) for data in self.fit_files]
-
-            # Appliquer les changements pour la première fois
             self.apply_changes()
 
         except Exception as e:
             self.view.show_error_message(f"Erreur lors du chargement des fichiers FIT: {str(e)}")
 
+
     def apply_changes(self):
         """Applique les changements de contraste et met à jour l'image."""
         try:
-            # Récupérer les valeurs des curseurs
-            red_scale = self.view.red_slider.value() / 100.0
-            green_scale = self.view.green_slider.value() / 100.0
-            blue_scale = self.view.blue_slider.value() / 100.0
+            red_scale = self.view.get_red_slider_value() / 100
+            green_scale = self.view.get_green_slider_value() / 100
+            blue_scale = self.view.get_blue_slider_value() / 100
 
-            # Ajuster les niveaux de chaque image
             adjusted_fit_files = [
                 self.fit_files[0] * red_scale,
                 self.fit_files[1] * green_scale,
                 self.fit_files[2] * blue_scale
             ]
 
-            vmin, vmax = 10, 1000
-            norms = [ImageNormalize(data, vmin=vmin, vmax=vmax, interval=MinMaxInterval()) for data in adjusted_fit_files]
+            norms = [
+                ImageNormalize(data, interval=MinMaxInterval()) for data in adjusted_fit_files
+            ]
+            scaled_images = [norm(data) for norm, data in zip(norms, adjusted_fit_files)]
 
-            rgb_image = np.dstack([norm(data) for norm, data in zip(norms, adjusted_fit_files)])
+            rgb_image = np.dstack(scaled_images)
+            rgb_image = np.clip(rgb_image, 0, 1)  
 
             self.model.set_rgb_image(rgb_image)
             self.view.set_image(rgb_image)
@@ -64,14 +69,14 @@ class FITSController:
         return output_path
 
     def display_image(self, rgb_image):
-        height, width = rgb_image.shape
+        height, width, _ = rgb_image.shape
         bytes_per_line = 3 * width
         q_image = QImage(
             (rgb_image * 255).astype(np.uint8), width, height, bytes_per_line, QImage.Format.Format_RGB888
         )
         pixmap = QPixmap.fromImage(q_image)
-        self.view.image_label.setPixmap(pixmap)
-        self.view.image_label.setScaledContents(True)
+        self.view.image_widget.setPixmap(pixmap)
+        self.view.image_widget.setScaledContents(True)
 
     def download_images(self):
         position = self.view.get_position()

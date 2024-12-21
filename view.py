@@ -8,7 +8,7 @@ class FITSView(QWidget):
         super().__init__()
         self.controller = controller
 
-        self.setWindowTitle("Application FITS - MVC")
+        self.setWindowTitle("MY SPACE")
         self.main_layout = QHBoxLayout(self)
 
         self.controls_layout = QVBoxLayout()
@@ -40,7 +40,7 @@ class FITSView(QWidget):
             # Ajuster la taille
             slider.setRange(0, 100)
             slider.setValue(50)
-            slider.setMinimumHeight(160) 
+            slider.setMinimumHeight(160)
             slider.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
             slider.setMaximumWidth(20)
 
@@ -52,7 +52,7 @@ class FITSView(QWidget):
 
             return layout, slider
 
-        # Création des curseurs rouge, vert et bleu
+        # Création des curseurs
         red_layout, self.red_slider = create_slider("Rouge")
         green_layout, self.green_slider = create_slider("Vert")
         blue_layout, self.blue_slider = create_slider("Bleu")
@@ -69,7 +69,7 @@ class FITSView(QWidget):
         self.download_button = QPushButton("Télécharger les images") 
         self.download_button.setMaximumWidth(160) 
         self.download_button.setMaximumHeight(30) 
-        self.download_button.clicked.connect(self.controller.download_images) # Connexion du bouton
+        self.download_button.clicked.connect(self.controller.download_images) 
 
         # Ajout des widgets dans controls_layout
         self.controls_layout.addWidget(self.load_button)
@@ -80,7 +80,6 @@ class FITSView(QWidget):
         self.controls_layout.addWidget(self.apply_button)
         self.controls_layout.addWidget(self.download_button)
 
-        # Widget pour afficher l'image
         self.image_widget = ImageWidget()
 
         self.main_layout.addLayout(self.controls_layout)
@@ -98,7 +97,7 @@ class FITSView(QWidget):
         self.image_widget.setPixmap(rgb_image)
 
     def get_position(self):
-        position, ok = QInputDialog.getText(self, "Position cible", "Entrez la position cible (par exemple, 'M31' ou '10.684,41.269') : ")
+        position, ok = QInputDialog.getText(self, "Position cible", "Entrez la position cible (par exemple, 'M51' ou '10.684,41.269') : ")
         if ok:
             return position
         else:
@@ -120,3 +119,16 @@ class FITSView(QWidget):
 
     def show_error_message(self, message):
         QMessageBox.critical(self, "Erreur", message)
+
+    # Méthodes pour obtenir les valeurs des curseurs
+    def get_red_slider_value(self):
+        """Retourne la valeur du curseur rouge."""
+        return self.red_slider.value()
+
+    def get_green_slider_value(self):
+        """Retourne la valeur du curseur vert."""
+        return self.green_slider.value()
+
+    def get_blue_slider_value(self):
+        """Retourne la valeur du curseur bleu."""
+        return self.blue_slider.value()

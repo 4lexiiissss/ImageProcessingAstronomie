@@ -1,3 +1,22 @@
+#   Copyright (C) 2024  Alexis Demol - Lucas Debruyne  
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+# ImageProcessingAstronomie project 2024
+# author: 
+# Alexis Demol (4lexiiissss) | alexisdemol.europe@gmail.com 
+# Lucas Debruyne (lucas210905) | lucas.debruyne2109@gmail.com
+
+# import 
+# -----------------------------------------------------------------------------
 from astropy.io import fits
 from astropy.visualization import MinMaxInterval, ImageNormalize, PercentileInterval
 import numpy as np
@@ -6,14 +25,20 @@ from PyQt6.QtCore import Qt
 from astroquery.skyview import SkyView
 import os
 
+# ------------------------------------------------------------------------------------------
+# --- class FITSController-------------------------------------------------------
+# ------------------------------------------------------------------------------------------
 class FITSController:
+    
+    # methods
+    # -------------------------------------------------- 
     def __init__(self, model, view):
         self.model = model
         self.view = view
         self.fit_files = []  
 
+    # -------------------------------------------------- 
     def load_fit_files(self):
-        """Ouvre un dialogue pour charger 3 fichiers FIT."""
         file_paths, _ = self.view.open_file_dialog()
 
         if len(file_paths) != 3:
@@ -35,8 +60,8 @@ class FITSController:
             self.view.show_error_message(f"Erreur lors du chargement des fichiers FIT: {str(e)}")
 
 
+    # -------------------------------------------------- 
     def apply_changes(self):
-        """Applique les changements de contraste et met à jour l'image."""
         try:
             red_scale = self.view.get_red_slider_value() / 100
             green_scale = self.view.get_green_slider_value() / 100
@@ -62,12 +87,7 @@ class FITSController:
         except Exception as e:
             self.view.show_error_message(f"Erreur lors de l'application des changements: {str(e)}")
 
-    def save_as_fits(self, rgb_image):
-        output_path = "output_combined.fits"
-        hdu = fits.PrimaryHDU(rgb_image)
-        hdu.writeto(output_path, overwrite=True)
-        return output_path
-
+    # -------------------------------------------------- 
     def display_image(self, rgb_image):
         height, width, _ = rgb_image.shape
         bytes_per_line = 3 * width
@@ -78,6 +98,7 @@ class FITSController:
         self.view.image_widget.setPixmap(pixmap)
         self.view.image_widget.setScaledContents(True)
 
+    # -------------------------------------------------- 
     def download_images(self):
         position = self.view.get_position()
         mission = self.view.get_mission()
@@ -92,6 +113,7 @@ class FITSController:
         except Exception as e:
             self.view.show_error_message(f"Erreur lors du téléchargement des images : {str(e)}")
 
+# -------------------------------------------------- 
 def telecharger_donnees_rgb(position, mission, dossier_sortie):
     surveys_rgb = {
         "rouge": f"{mission} Red",
